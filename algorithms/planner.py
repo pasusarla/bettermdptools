@@ -1,3 +1,8 @@
+import numpy as np
+import warnings
+from decorators.decorators import print_runtime
+
+
 """
 Author: Miguel Morales
 BSD 3-Clause License
@@ -20,10 +25,6 @@ Assumes prior knowledge of the type of reward available to the agent
 for iterating to an optimal policy and reward value for a given MDP.
 """
 
-import numpy as np
-import warnings
-from decorators.decorators import print_runtime
-
 
 class Planner:
     def __init__(self, P):
@@ -42,7 +43,8 @@ class Planner:
 
         theta {float}:
             Convergence criterion for value iteration.
-            State values are considered to be converged when the maximum difference between new and previous state values is less than theta.
+            State values are considered to be converged when the maximum difference between new and previous state
+             values is less than theta.
             Stops at n_iters or theta convergence - whichever comes first.
 
 
@@ -61,7 +63,7 @@ class Planner:
         V_track = np.zeros((n_iters, len(self.P)), dtype=np.float64)
         i = 0
         converged = False
-        while i < n_iters-1 and not converged:
+        while i < n_iters - 1 and not converged:
             i += 1
             Q = np.zeros((len(self.P), len(self.P[0])), dtype=np.float64)
             for s in range(len(self.P)):
@@ -73,14 +75,15 @@ class Planner:
             V = np.max(Q, axis=1)
             V_track[i] = V
         if not converged:
-            warnings.warn("Max iterations reached before convergence.  Check theta and n_iters.  ")
-        # Explanation of lambda:
-        # def pi(s):
-        #   policy = dict()
-        #   for state, action in enumerate(np.argmax(Q, axis=1)):
-        #       policy[state] = action
-        #   return policy[s]
-        pi = lambda s: {s:a for s, a in enumerate(np.argmax(Q, axis=1))}[s]
+            warnings.warn("Max iterations reached before convergence. Check theta and n_iters.")
+
+        def pi(_s):
+            policy = dict()
+            for state, action in enumerate(np.argmax(Q, axis=1)):
+                policy[state] = action
+
+            return policy[_s]
+
         return V, V_track, pi
 
     @print_runtime
@@ -112,19 +115,20 @@ class Planner:
             Policy mapping states to actions.
         """
         random_actions = np.random.choice(tuple(self.P[0].keys()), len(self.P))
-        # Explanation of lambda:
-        # def pi(s):
-        #   policy = dict()
-        #   for state, action in enumerate(np.argmax(Q, axis=1)):
-        #       policy[state] = action
-        #   return policy[s]
-        pi = lambda s: {s: a for s, a in enumerate(random_actions)}[s]
+
+        def pi(s):
+            policy = dict()
+            for state, action in enumerate(random_actions):
+                policy[state] = action
+
+            return policy[s]
+
         # initial V to give to `policy_evaluation` for the first time
         V = np.zeros(len(self.P), dtype=np.float64)
         V_track = np.zeros((n_iters, len(self.P)), dtype=np.float64)
         i = 0
         converged = False
-        while i < n_iters and not converged:
+        while i < n_iters - 1 and not converged:
             i += 1
             old_pi = {s: pi(s) for s in range(len(self.P))}
             V = self.policy_evaluation(pi, V, gamma, theta)
@@ -133,7 +137,7 @@ class Planner:
             if old_pi == {s: pi(s) for s in range(len(self.P))}:
                 converged = True
         if not converged:
-            warnings.warn("Max iterations reached before convergence.  Check n_iters.")
+            warnings.warn("Max iterations reached before convergence. Check n_iters.")
         return V, V_track, pi
 
     def policy_evaluation(self, pi, prev_V, gamma=1.0, theta=1e-10):
@@ -153,11 +157,12 @@ class Planner:
             for a in range(len(self.P[s])):
                 for prob, next_state, reward, done in self.P[s][a]:
                     Q[s][a] += prob * (reward + gamma * V[next_state] * (not done))
-        # Explanation of lambda:
-        # def new_pi(s):
-        #   policy = dict()
-        #   for state, action in enumerate(np.argmax(Q, axis=1)):
-        #       policy[state] = action
-        #   return policy[s]
-        new_pi = lambda s: {s: a for s, a in enumerate(np.argmax(Q, axis=1))}[s]
+
+        def new_pi(_s):
+            policy = dict()
+            for state, action in enumerate(np.argmax(Q, axis=1)):
+                policy[state] = action
+
+            return policy[_s]
+
         return new_pi

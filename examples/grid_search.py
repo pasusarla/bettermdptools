@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import gym
+import gymnasium as gym
 import pygame
 from examples.test_env import TestEnv
 from algorithms.rl import RL
