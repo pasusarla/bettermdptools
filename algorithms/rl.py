@@ -1,7 +1,6 @@
 import numpy as np
 from tqdm import tqdm
 from callbacks.callbacks import MyCallbacks
-from decorators.decorators import print_runtime
 import warnings
 
 
@@ -71,9 +70,9 @@ class RL:
         values = (values - values.min()) / (values.max() - values.min())
         values = (init_value - min_value) * values + min_value
         values = np.pad(values, (0, rem_steps), 'edge')
+
         return values
 
-    @print_runtime
     def q_learning(self,
                    nS=None,
                    nA=None,
@@ -144,11 +143,14 @@ class RL:
         """
         if nS is None:
             nS = self.env.observation_space.n
+
         if nA is None:
             nA = self.env.action_space.n
+
         pi_track = []
         Q = np.zeros((nS, nA), dtype=np.float64)
         Q_track = np.zeros((n_episodes, nS, nA), dtype=np.float64)
+        V_track = np.zeros((n_episodes, nS), dtype=np.float64)
 
         def select_action(_state, _Q, epsilon):
             if np.random.random() > epsilon:
@@ -156,14 +158,8 @@ class RL:
             else:
                 return np.random.randint(len(_Q[_state]))
 
-        alphas = RL.decay_schedule(init_alpha,
-                                   min_alpha,
-                                   alpha_decay_ratio,
-                                   n_episodes)
-        epsilons = RL.decay_schedule(init_epsilon,
-                                     min_epsilon,
-                                     epsilon_decay_ratio,
-                                     n_episodes)
+        alphas = RL.decay_schedule(init_alpha, min_alpha, alpha_decay_ratio, n_episodes)
+        epsilons = RL.decay_schedule(init_epsilon, min_epsilon, epsilon_decay_ratio, n_episodes)
         for e in tqdm(range(n_episodes), leave=False):
             self.callbacks.on_episode_begin(self)
             self.callbacks.on_episode(self, episode=e)
@@ -173,10 +169,12 @@ class RL:
             while not done:
                 if self.render:
                     warnings.warn("Occasional render has been deprecated by openAI. Use test_env.py to render.")
+
                 action = select_action(state, Q, epsilons[e])
                 next_state, reward, terminated, truncated, _ = self.env.step(action)
                 if truncated:
                     warnings.warn("Episode was truncated. Bootstrapping 0 reward.")
+
                 done = terminated or truncated
                 self.callbacks.on_env_step(self)
                 next_state = convert_state_obs(next_state, done)
@@ -184,7 +182,9 @@ class RL:
                 td_error = td_target - Q[state][action]
                 Q[state][action] = Q[state][action] + alphas[e] * td_error
                 state = next_state
+
             Q_track[e] = Q
+            V_track[e] = np.max(Q, axis=1)
             pi_track.append(np.argmax(Q, axis=1))
             self.render = False
             self.callbacks.on_episode_end(self)
@@ -198,9 +198,8 @@ class RL:
 
             return policy[s]
 
-        return Q, V, pi, Q_track, pi_track
+        return Q, V, pi, Q_track, V_track, pi_track, e + 1
 
-    @print_runtime
     def sarsa(self,
               nS=None,
               nA=None,
@@ -271,8 +270,10 @@ class RL:
         """
         if nS is None:
             nS = self.env.observation_space.n
+
         if nA is None:
             nA = self.env.action_space.n
+
         pi_track = []
         Q = np.zeros((nS, nA), dtype=np.float64)
         Q_track = np.zeros((n_episodes, nS, nA), dtype=np.float64)
@@ -283,14 +284,8 @@ class RL:
             else:
                 return np.random.randint(len(_Q[_state]))
 
-        alphas = RL.decay_schedule(init_alpha,
-                                   min_alpha,
-                                   alpha_decay_ratio,
-                                   n_episodes)
-        epsilons = RL.decay_schedule(init_epsilon,
-                                     min_epsilon,
-                                     epsilon_decay_ratio,
-                                     n_episodes)
+        alphas = RL.decay_schedule(init_alpha, min_alpha, alpha_decay_ratio, n_episodes)
+        epsilons = RL.decay_schedule(init_epsilon, min_epsilon, epsilon_decay_ratio, n_episodes)
 
         for e in tqdm(range(n_episodes), leave=False):
             self.callbacks.on_episode_begin(self)
@@ -302,9 +297,11 @@ class RL:
             while not done:
                 if self.render:
                     warnings.warn("Occasional render has been deprecated by openAI. Use test_env.py to render.")
+
                 next_state, reward, terminated, truncated, _ = self.env.step(action)
                 if truncated:
                     warnings.warn("Episode was truncated. Bootstrapping 0 reward.")
+
                 done = terminated or truncated
                 self.callbacks.on_env_step(self)
                 next_state = convert_state_obs(next_state, done)
@@ -313,6 +310,7 @@ class RL:
                 td_error = td_target - Q[state][action]
                 Q[state][action] = Q[state][action] + alphas[e] * td_error
                 state, action = next_state, next_action
+
             Q_track[e] = Q
             pi_track.append(np.argmax(Q, axis=1))
             self.render = False
@@ -327,4 +325,4 @@ class RL:
 
             return policy[s]
 
-        return Q, V, pi, Q_track, pi_track
+        return Q, V, pi, Q_track, pi_track, e + 1

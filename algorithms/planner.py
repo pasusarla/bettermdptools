@@ -1,6 +1,5 @@
 import numpy as np
 import warnings
-from decorators.decorators import print_runtime
 
 
 """
@@ -30,7 +29,6 @@ class Planner:
     def __init__(self, P):
         self.P = P
 
-    @print_runtime
     def value_iteration(self, gamma=1.0, n_iters=1000, theta=1e-10):
         """
         PARAMETERS:
@@ -70,10 +68,13 @@ class Planner:
                 for a in range(len(self.P[s])):
                     for prob, next_state, reward, done in self.P[s][a]:
                         Q[s][a] += prob * (reward + gamma * V[next_state] * (not done))
+
             if np.max(np.abs(V - np.max(Q, axis=1))) < theta:
                 converged = True
+
             V = np.max(Q, axis=1)
             V_track[i] = V
+
         if not converged:
             warnings.warn("Max iterations reached before convergence. Check theta and n_iters.")
 
@@ -84,9 +85,8 @@ class Planner:
 
             return policy[_s]
 
-        return V, V_track, pi
+        return V, V_track, pi, i
 
-    @print_runtime
     def policy_iteration(self, gamma=1.0, n_iters=50, theta=1e-10):
         """
         PARAMETERS:
@@ -136,9 +136,11 @@ class Planner:
             pi = self.policy_improvement(V, gamma)
             if old_pi == {s: pi(s) for s in range(len(self.P))}:
                 converged = True
+
         if not converged:
             warnings.warn("Max iterations reached before convergence. Check n_iters.")
-        return V, V_track, pi
+
+        return V, V_track, pi, i
 
     def policy_evaluation(self, pi, prev_V, gamma=1.0, theta=1e-10):
         while True:
@@ -146,9 +148,12 @@ class Planner:
             for s in range(len(self.P)):
                 for prob, next_state, reward, done in self.P[s][pi(s)]:
                     V[s] += prob * (reward + gamma * prev_V[next_state] * (not done))
+
             if np.max(np.abs(prev_V - V)) < theta:
                 break
+
             prev_V = V.copy()
+
         return V
 
     def policy_improvement(self, V, gamma=1.0):
