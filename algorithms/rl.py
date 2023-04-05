@@ -31,7 +31,6 @@ class RL:
     def __init__(self, env):
         self.env = env
         self.callbacks = MyCallbacks()
-        self.render = False
 
     @staticmethod
     def decay_schedule(init_value, min_value, decay_ratio, max_steps, log_start=-2, log_base=10):
@@ -167,9 +166,6 @@ class RL:
             done = False
             state = convert_state_obs(state, done)
             while not done:
-                if self.render:
-                    warnings.warn("Occasional render has been deprecated by openAI. Use test_env.py to render.")
-
                 action = select_action(state, Q, epsilons[e])
                 next_state, reward, terminated, truncated, _ = self.env.step(action)
                 if truncated:
@@ -186,19 +182,18 @@ class RL:
             Q_track[e] = Q
             V_track[e] = np.max(Q, axis=1)
             pi_track.append(np.argmax(Q, axis=1))
-            self.render = False
             self.callbacks.on_episode_end(self)
 
         V = np.max(Q, axis=1)
 
-        def pi(s):
+        def pi(s, _Q=None):
             policy = dict()
             for _state, _action in enumerate(np.argmax(Q, axis=1)):
                 policy[_state] = _action
 
             return policy[s]
 
-        return Q, V, pi, Q_track, V_track, pi_track, e + 1
+        return Q, V, pi, Q_track, V_track, pi_track
 
     def sarsa(self,
               nS=None,
@@ -295,9 +290,6 @@ class RL:
             state = convert_state_obs(state, done)
             action = select_action(state, Q, epsilons[e])
             while not done:
-                if self.render:
-                    warnings.warn("Occasional render has been deprecated by openAI. Use test_env.py to render.")
-
                 next_state, reward, terminated, truncated, _ = self.env.step(action)
                 if truncated:
                     warnings.warn("Episode was truncated. Bootstrapping 0 reward.")
@@ -313,16 +305,15 @@ class RL:
 
             Q_track[e] = Q
             pi_track.append(np.argmax(Q, axis=1))
-            self.render = False
             self.callbacks.on_episode_end(self)
 
         V = np.max(Q, axis=1)
 
-        def pi(s):
+        def pi(s, _Q=None):
             policy = dict()
             for _state, _action in enumerate(np.argmax(Q, axis=1)):
                 policy[_state] = _action
 
             return policy[s]
 
-        return Q, V, pi, Q_track, pi_track, e + 1
+        return Q, V, pi, Q_track, pi_track
