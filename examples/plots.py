@@ -14,25 +14,30 @@ from matplotlib.colors import LinearSegmentedColormap
 
 class Plots:
     @staticmethod
-    def grid_world_policy_plot(data, label):
+    def grid_world_policy_plot(data, label, mode='show', f_name=None):
         if not math.modf(math.sqrt(len(data)))[0] == 0.0:
             warnings.warn("Grid map expected. Check data length")
         else:
-            data = np.around(np.array(data).reshape((8, 8)), 2)
+            size = int(np.sqrt(len(data)))
+            data = np.around(np.array(data).reshape((size, size)), 2)
             df = pd.DataFrame(data=data)
             my_colors = ((0.0, 0.0, 0.0, 1.0), (0.8, 0.0, 0.0, 1.0), (0.0, 0.8, 0.0, 1.0), (0.0, 0.0, 0.8, 1.0))
             cmap = LinearSegmentedColormap.from_list('Custom', my_colors, len(my_colors))
             ax = sns.heatmap(df, cmap=cmap, linewidths=1.0)
-            colorbar = ax.collections[0].colorbar
+            colorbar = ax.collections[-1].colorbar
             colorbar.set_ticks([.4, 1.1, 1.9, 2.6])
             colorbar.set_ticklabels(['Left', 'Down', 'Right', 'Up'])
             plt.title(label)
-            plt.show()
+            if mode == 'show':
+                plt.show()
+            else:
+                plt.savefig('plots/' + f_name + ' policy.png')
+                plt.close()
 
     @staticmethod
     def grid_values_heat_map(data, label):
         if not math.modf(math.sqrt(len(data)))[0] == 0.0:
-            warnings.warn("Grid map expected.  Check data length")
+            warnings.warn("Grid map expected. Check data length")
         else:
             data = np.around(np.array(data).reshape((8, 8)), 2)
             df = pd.DataFrame(data=data)
@@ -49,7 +54,7 @@ class Plots:
         if mode == 'show':
             plt.show()
         else:
-            plt.savefig('plots/' + f_name + '.png')
+            plt.savefig('plots/' + f_name + ' convergence.png')
             if close_plot:
                 plt.close()
 
@@ -61,14 +66,12 @@ if __name__ == "__main__":
     Q, _, _, pi, _ = Planner(frozen_lake.P).value_iteration()
     n_states = frozen_lake.env.observation_space.n
     new_pi = list(map(lambda x: pi(x, Q), range(n_states)))
-    s = int(math.sqrt(n_states))
     Plots.grid_world_policy_plot(np.array(new_pi), "Grid World Policy")
 
     # Q-learning grid_world_policy_plot
     _, _, pi, _, _, _ = RL(frozen_lake.env).q_learning()
     n_states = frozen_lake.env.observation_space.n
     new_pi = list(map(lambda x: pi(x, None), range(n_states)))
-    s = int(math.sqrt(n_states))
     Plots.grid_world_policy_plot(np.array(new_pi), "Grid World Policy")
 
     # Q-learning v_iters_plot
