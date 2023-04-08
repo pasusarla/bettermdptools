@@ -16,7 +16,20 @@ class Plots:
     @staticmethod
     def grid_world_policy_plot(data, label, mode='show', f_name=None):
         if not math.modf(math.sqrt(len(data)))[0] == 0.0:
-            warnings.warn("Grid map expected. Check data length")
+            data = np.around(np.array(data).reshape((29, 10)), 2)
+            df = pd.DataFrame(data=data)
+            my_colors = ((0.0, 0.8, 0.0, 1.0), (0.0, 0.0, 0.8, 1.0))
+            cmap = LinearSegmentedColormap.from_list('Custom', my_colors, len(my_colors))
+            ax = sns.heatmap(df, cmap=cmap, linewidths=1.0)
+            colorbar = ax.collections[-1].colorbar
+            colorbar.set_ticks([.25, .75])
+            colorbar.set_ticklabels(['Hit', 'Stand'])
+            plt.title(label)
+            if mode == 'show':
+                plt.show()
+            else:
+                plt.savefig('plots/' + f_name + ' policy.png')
+                plt.close()
         else:
             size = int(np.sqrt(len(data)))
             data = np.around(np.array(data).reshape((size, size)), 2)
