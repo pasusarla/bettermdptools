@@ -48,14 +48,20 @@ class Plots:
                 plt.close()
 
     @staticmethod
-    def grid_values_heat_map(data, label):
+    def grid_values_heat_map(data, label, annot=True, mode='show', f_name=None):
         if not math.modf(math.sqrt(len(data)))[0] == 0.0:
-            warnings.warn("Grid map expected. Check data length")
+            data = np.around(np.array(data).reshape((29, 10)), 2)
         else:
-            data = np.around(np.array(data).reshape((8, 8)), 2)
-            df = pd.DataFrame(data=data)
-            sns.heatmap(df, annot=True).set_title(label)
+            size = int(np.sqrt(len(data)))
+            data = np.around(np.array(data).reshape((size, size)), 2)
+
+        df = pd.DataFrame(data=data)
+        sns.heatmap(df, annot=annot).set_title(label)
+        if mode == 'show':
             plt.show()
+        else:
+            plt.savefig('plots/' + f_name + ' heatmap.png')
+            plt.close()
 
     @staticmethod
     def v_iters_plot(data, label, gamma=0.5, mode='show', f_name=None, close_plot=False):
