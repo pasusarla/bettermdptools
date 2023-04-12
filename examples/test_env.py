@@ -1,5 +1,6 @@
 import gymnasium as gym
 import numpy as np
+from gymnasium.envs.toy_text.frozen_lake import generate_random_map
 
 
 # -*- coding: utf-8 -*-
@@ -65,7 +66,7 @@ class TestEnv:
                 if user_input:
                     # get user input and suggest policy output
                     print("state is %i" % state)
-                    print("policy output is %i" % pi(state))
+                    print("policy output is %i" % pi(state, Q))
                     while True:
                         action = input("Please select 0 - %i then hit enter:\n" % int(n_actions - 1))
                         try:
