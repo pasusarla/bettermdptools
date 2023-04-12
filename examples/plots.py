@@ -64,16 +64,16 @@ class Plots:
             plt.close()
 
     @staticmethod
-    def v_iters_plot(data, label, gamma=0.5, mode='show', f_name=None, close_plot=False):
+    def v_iters_plot(data, label, pv=0.5, mode='show', f_name=None, close_plot=False, pn='γ'):
         df = pd.DataFrame(data=data)
         df.columns = [label]
         title = label + " vs. Iterations"
-        sns.lineplot(x=df.index, y=label, data=df, label='γ = ' + str(gamma)).set_title(title)
+        sns.lineplot(x=df.index, y=label, data=df, label=pn + ' = ' + str(pv)).set_title(title)
         plt.legend(loc='best')
         if mode == 'show':
             plt.show()
         else:
-            plt.savefig('plots/' + f_name + ' convergence.png')
+            plt.savefig('plots/' + f_name + 'convergence.png')
             if close_plot:
                 plt.close()
 
