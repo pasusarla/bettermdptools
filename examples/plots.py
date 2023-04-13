@@ -16,7 +16,7 @@ class Plots:
     @staticmethod
     def grid_world_policy_plot(data, label, mode='show', f_name=None):
         if not math.modf(math.sqrt(len(data)))[0] == 0.0:
-            data = np.around(np.array(data).reshape((29, 10)), 2)
+            data = np.around(np.array(data).reshape((int(len(data) / 10), 10)), 2)
             df = pd.DataFrame(data=data)
             my_colors = ((0.0, 0.8, 0.0, 1.0), (0.0, 0.0, 0.8, 1.0))
             cmap = LinearSegmentedColormap.from_list('Custom', my_colors, len(my_colors))
@@ -50,7 +50,7 @@ class Plots:
     @staticmethod
     def grid_values_heat_map(data, label, annot=True, mode='show', f_name=None):
         if not math.modf(math.sqrt(len(data)))[0] == 0.0:
-            data = np.around(np.array(data).reshape((29, 10)), 2)
+            data = np.around(np.array(data).reshape((int(len(data) / 10), 10)), 2)
         else:
             size = int(np.sqrt(len(data)))
             data = np.around(np.array(data).reshape((size, size)), 2)
