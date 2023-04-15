@@ -23,7 +23,7 @@ class Plots:
             ax = sns.heatmap(df, cmap=cmap, linewidths=1.0)
             colorbar = ax.collections[-1].colorbar
             colorbar.set_ticks([.25, .75])
-            colorbar.set_ticklabels(['Hit', 'Stand'])
+            colorbar.set_ticklabels(['Stand', 'Hit'])
             plt.title(label)
             if mode == 'show':
                 plt.show()
