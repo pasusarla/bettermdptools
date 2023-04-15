@@ -79,7 +79,7 @@ class Planner:
                     for prob, next_state, reward, done in self.P[s][a]:
                         Q[s][a] += prob * (reward + gamma * V[next_state] * (not done))
 
-            if np.max(np.abs(V - np.max(Q, axis=1))) < theta:
+            if np.median(np.abs(V - np.max(Q, axis=1))) < theta:
                 converged = True
                 pi_track.append({s: pi(s, Q) for s in range(len(self.P))})
 
@@ -157,7 +157,7 @@ class Planner:
                 for prob, next_state, reward, done in self.P[s][pi(s)]:
                     V[s] += prob * (reward + gamma * prev_V[next_state] * (not done))
 
-            if np.max(np.abs(prev_V - V)) < theta:
+            if np.median(np.abs(prev_V - V)) < theta:
                 break
 
             prev_V = V.copy()
